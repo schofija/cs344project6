@@ -124,14 +124,19 @@ fn main() {
 
     // Change the following code to create 2 threads that run concurrently and each of which uses map_data() function to process one of the two partitions
 
+	let mut t = vec![];
+	
 	for i in 0..2
 	{
 		let d = xs[i].clone();
-		let t = thread::spawn(move || { map_data(&d) });
-		intermediate_sums.push(t.join().unwrap());
+		t.push(thread::spawn(move || {map_data(&d) }));
 	}
-    //intermediate_sums.push(map_data(&xs[0]));
-    //intermediate_sums.push(map_data(&xs[1]));
+
+	for threads in t
+	{
+		let isum = threads.join().unwrap();
+		intermediate_sums.push(isum);
+	}
 
     // CHANGE CODE END: Don't change any code below this line until the next CHANGE CODE comment
 
@@ -147,24 +152,28 @@ fn main() {
 	let xs = partition_data(num_partitions, &v);
     // 2. Calls print_partition_info to print info on the partitions that have been created
 	print_partition_info(&xs);
+	
     // 3. Creates one thread per partition and uses each thread to concurrently process one partition
-    // 4. Collects the intermediate sums from all the threads
 	let mut intermediate_sums : Vec<usize> = Vec::new();
+	let mut t = vec![];
+	
 	for i in 0..num_partitions
 	{
 		let d = xs[i].clone();
-		let t = thread::spawn(move || { map_data(&d) });
-		intermediate_sums.push(t.join().unwrap());
+		t.push(thread::spawn(move || {map_data(&d) }));
 	}
-    // 5. Prints information about the intermediate sums
+    // 4. Collects the intermediate sums from all the threads
+	for threads in t
+	{
+		let isum = threads.join().unwrap();
+		intermediate_sums.push(isum);
+	}
+	// I deleted the comments on accident and the template 404d... oops
+	// Below this I print the intermediate sums, call reduce_data(), and print the result
 	println!("Intermediate sums = {:?}", intermediate_sums);
-    // 5. Calls reduce_data to process the intermediate sums
 	let sum = reduce_data(&intermediate_sums);
-    // 6. Prints the final sum computed by reduce_data
-	println!("Sum = {}", sum);
-
+    println!("Sum = {}", sum);
 }
-
 /*
 * CHANGE CODE: code this function
 * Note: Don't change the signature of this function
@@ -182,6 +191,7 @@ fn main() {
 fn partition_data(num_partitions: usize, v: &Vec<usize>) -> Vec<Vec<usize>>
 {
     let partition_size = v.len() / num_partitions;
+	let mut stragglers = v.len() % num_partitions; // remainder
 	
     let mut xs: Vec<Vec<usize>> = Vec::new();
 	
@@ -189,7 +199,7 @@ fn partition_data(num_partitions: usize, v: &Vec<usize>) -> Vec<Vec<usize>>
 							used in final for loop */
 							
 	/* this loop filles out partitions*/
-	for _i in 0..num_partitions - 1 /* loop through each partition (except the last, see below)*/
+	for _i in 0..num_partitions /* loop through each partition (except the last, see below)*/
 	{
 		let mut xi: Vec<usize> = Vec::new();
 		for _j in 0..partition_size
@@ -197,15 +207,13 @@ fn partition_data(num_partitions: usize, v: &Vec<usize>) -> Vec<Vec<usize>>
 			xi.push(v[count]);
 			count = count + 1;
 		}
+		if stragglers > 0
+		{
+			xi.push(v[count]);
+			count = count + 1;
+			stragglers = stragglers - 1;
+		}	
 		xs.push(xi);
 	}
-	
-	/* this final loop handles the remainder (for partitions that do not divided up evenly) */
-	let mut xi: Vec<usize> = Vec::new();
-	for i in count..v.len()
-	{
-		xi.push(v[i]);
-	}
-	xs.push(xi);
 xs
 }
