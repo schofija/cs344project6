@@ -168,9 +168,9 @@ fn main() {
 		let isum = threads.join().unwrap();
 		intermediate_sums.push(isum);
 	}
-	// I deleted the comments on accident and the template 404d... oops
-	// Below this I print the intermediate sums, call reduce_data(), and print the result
+	// 5. Prints information about the intermediate sums
 	println!("Intermediate sums = {:?}", intermediate_sums);
+	// 6. Prints the final sum computed by reduce_data
 	let sum = reduce_data(&intermediate_sums);
     println!("Sum = {}", sum);
 }
